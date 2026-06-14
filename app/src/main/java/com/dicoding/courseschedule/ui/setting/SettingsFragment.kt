@@ -1,9 +1,5 @@
 package com.dicoding.courseschedule.ui.setting
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.ListPreference
@@ -11,7 +7,6 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import com.dicoding.courseschedule.R
 import com.dicoding.courseschedule.notification.DailyReminder
-import java.util.Calendar
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -49,48 +44,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         AppCompatDelegate.setDefaultNightMode(nightMode)
         requireActivity().recreate()
     }
+
     private fun scheduleNotification() {
-        val dailyReminderIntent = Intent(context, DailyReminder::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            DAILY_REMINDER_REQUEST_CODE,
-            dailyReminderIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val alarmManager = context?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
-            set(Calendar.HOUR_OF_DAY, NOTIFICATION_HOUR)
-            set(Calendar.MINUTE, NOTIFICATION_MINUTE)
-            set(Calendar.SECOND, 0)
-        }
-
-        alarmManager?.setInexactRepeating(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-        )
+        DailyReminder().setDailyReminder(requireContext())
     }
 
     private fun cancelNotification() {
-        val dailyReminderIntent = Intent(context, DailyReminder::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            DAILY_REMINDER_REQUEST_CODE,
-            dailyReminderIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val alarmManager = context?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        alarmManager?.cancel(pendingIntent)
-    }
-
-    companion object {
-        private const val DAILY_REMINDER_REQUEST_CODE = 1001
-        private const val NOTIFICATION_HOUR = 9
-        private const val NOTIFICATION_MINUTE = 0
+        DailyReminder().cancelAlarm(requireContext())
     }
 }
 

@@ -26,8 +26,8 @@ interface CourseDao {
     @RawQuery(observedEntities = [Course::class])
     fun getSortedCourse(query: SupportSQLiteQuery): DataSource.Factory<Int, Course>
 
-    @Query("SELECT * FROM course WHERE id = (SELECT id FROM course WHERE day >= :currentDay ORDER BY day ASC LIMIT 1)")
-    fun getNearestSchedule(currentDay: Int): LiveData<Course?>
+    @RawQuery(observedEntities = [Course::class])
+    fun getNearestSchedule(query: SupportSQLiteQuery): LiveData<Course?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(course: Course)

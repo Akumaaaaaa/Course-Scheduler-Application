@@ -35,7 +35,7 @@ class HomeActivity : AppCompatActivity() {
         val factory = HomeViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory)[HomeViewModel::class.java]
 
-        viewModel.getNearestSchedule().observe(this) { course ->
+        viewModel.nearestSchedule.observe(this) { course ->
             showTodaySchedule(course)
         }
     }
@@ -60,14 +60,12 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun checkQueryType(course: Course?) {
-        if (course == null) {
-            val newQueryType: QueryType = when (queryType) {
+        if (course == null && queryType != QueryType.PAST_DAY) {
+            queryType = when (queryType) {
                 QueryType.CURRENT_DAY -> QueryType.NEXT_DAY
-                QueryType.NEXT_DAY -> QueryType.PAST_DAY
-                else -> QueryType.CURRENT_DAY
+                else -> QueryType.PAST_DAY
             }
-            viewModel.setQueryType(newQueryType)
-            queryType = newQueryType
+            viewModel.setQueryType(queryType)
         }
     }
 

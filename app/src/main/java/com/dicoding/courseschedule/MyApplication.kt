@@ -15,8 +15,12 @@ class MyApplication : Application() {
         preferences.getString(
             getString(R.string.pref_key_dark),
             getString(R.string.pref_dark_auto)
-        )?.apply {
-            val mode = NightMode.valueOf(this.uppercase(Locale.US))
+        )?.let { value ->
+            val mode = try {
+                NightMode.valueOf(value.uppercase(Locale.US))
+            } catch (e: IllegalArgumentException) {
+                NightMode.AUTO
+            }
             AppCompatDelegate.setDefaultNightMode(mode.value)
         }
     }

@@ -6,15 +6,15 @@ import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.dicoding.courseschedule.util.QueryType
+import com.dicoding.courseschedule.util.QueryUtil
 import com.dicoding.courseschedule.util.SortType
 import com.dicoding.courseschedule.util.executeThread
-import java.util.Calendar
 
 // TODO 4: Implement repository with appropriate dao
 class DataRepository(private val dao: CourseDao) {
 
     fun getNearestSchedule(queryType: QueryType): LiveData<Course?> {
-        return dao.getNearestSchedule(getCurrentDay())
+        return dao.getNearestSchedule(QueryUtil.nearestQuery(queryType))
     }
 
     fun getAllCourse(sortType: SortType): LiveData<PagedList<Course>> {
@@ -47,11 +47,6 @@ class DataRepository(private val dao: CourseDao) {
 
     fun delete(course: Course) = executeThread {
         dao.delete(course)
-    }
-
-    private fun getCurrentDay(): Int {
-        val calendar = Calendar.getInstance()
-        return calendar.get(Calendar.DAY_OF_WEEK)
     }
 
     companion object {

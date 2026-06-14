@@ -22,17 +22,20 @@ import java.util.Calendar
 class DailyReminder : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        val pendingResult = goAsync()
         executeThread {
-            val repository = DataRepository.getInstance(context)
-            val courses = repository?.getTodaySchedule()
-
-            courses?.let {
-                if (it.isNotEmpty()) showNotification(context, it)
+            try {
+                val repository = DataRepository.getInstance(context)
+                val courses = repository?.getTodaySchedule()
+                courses?.let {
+                    if (it.isNotEmpty()) showNotification(context, it)
+                }
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    //TODO 12 : Implement daily reminder for every 06.00 a.m using AlarmManager
     fun setDailyReminder(context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
         val alarmIntent = Intent(context, DailyReminder::class.java)
@@ -40,13 +43,17 @@ class DailyReminder : BroadcastReceiver() {
             context,
             DAILY_REMINDER_REQUEST_CODE,
             alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            pendingIntentFlags()
         )
 
         val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 6)
+            set(Calendar.HOUR_OF_DAY, ALARM_HOUR)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
         }
 
         alarmManager?.setInexactRepeating(
@@ -64,10 +71,17 @@ class DailyReminder : BroadcastReceiver() {
             context,
             DAILY_REMINDER_REQUEST_CODE,
             alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            pendingIntentFlags()
         )
-
         alarmManager?.cancel(pendingIntent)
+    }
+
+    private fun pendingIntentFlags(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
     }
 
     private fun showNotification(context: Context, content: List<Course>) {
@@ -91,7 +105,11 @@ class DailyReminder : BroadcastReceiver() {
             context,
             0,
             notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
         )
 
         val timeString = context.resources.getString(R.string.notification_message_format)
@@ -113,6 +131,7 @@ class DailyReminder : BroadcastReceiver() {
     }
 
     companion object {
-        private const val DAILY_REMINDER_REQUEST_CODE = 1001
+        const val DAILY_REMINDER_REQUEST_CODE = 1001
+        const val ALARM_HOUR = 6
     }
 }

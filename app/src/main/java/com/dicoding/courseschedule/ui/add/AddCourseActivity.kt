@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.courseschedule.R
 import com.dicoding.courseschedule.util.TimePickerFragment
@@ -25,6 +26,16 @@ class AddCourseActivity : AppCompatActivity(), TimePickerFragment.DialogTimeList
 
         val factory = AddCourseViewModelFactory.createFactory(this)
         viewModel = ViewModelProvider(this, factory)[AddCourseViewModel::class.java]
+
+        viewModel.saved.observe(this) { event ->
+            event.getContentIfNotHandled()?.let { success ->
+                if (success) {
+                    finish()
+                } else {
+                    Toast.makeText(this, getString(R.string.input_empty_message), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
         findViewById<Button>(R.id.btn_save).setOnClickListener {
             saveCourse()
@@ -48,7 +59,6 @@ class AddCourseActivity : AppCompatActivity(), TimePickerFragment.DialogTimeList
         val note = findViewById<EditText>(R.id.ed_note).text.toString()
 
         viewModel.insertCourse(courseName, day, startTime, endTime, lecturer, note)
-        finish()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
